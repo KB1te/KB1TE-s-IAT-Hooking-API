@@ -7,8 +7,8 @@
 
 class Hook {
 public:
-	BOOL HOOK(HMODULE hMod, LPCSTR toHook, LPVOID myFunction, LPCSTR modName);
-	BOOL HOOK(HMODULE hMod, LPCSTR toHook, LPVOID myFunction, LPCSTR modName, DWORD *hookedAddress);
+	BOOL HOOK(LPCSTR toHook, LPVOID myFunction, LPCSTR modName);
+	BOOL HOOK(LPCSTR toHook, LPVOID myFunction, LPCSTR modName, DWORD *hookedAddress);
 	void PrintHookInfo(Hook *hookInfo);
 private:
 	DWORD *hookedAddress;
