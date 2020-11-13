@@ -1,7 +1,8 @@
 #include "hook.h"
 
-BOOL Hook::HOOK(HMODULE hMod,LPCSTR toHook,LPVOID myFunction,LPCSTR modName)
+BOOL Hook::HOOK(LPCSTR toHook,LPVOID myFunction,LPCSTR modName)
 {
+	HMODULE hMod = GetModuleHandle(0);
 	MODULEINFO modInfo;
 	GetModuleInformation(GetCurrentProcess(), hMod, &modInfo, sizeof(MODULEINFO));
 	ULONG a;
@@ -41,9 +42,10 @@ BOOL Hook::HOOK(HMODULE hMod,LPCSTR toHook,LPVOID myFunction,LPCSTR modName)
 	return FALSE;
 }
 
-BOOL Hook::HOOK(HMODULE hMod, LPCSTR toHook, LPVOID myFunction, LPCSTR modName,DWORD *hookedAddress)
+BOOL Hook::HOOK(LPCSTR toHook, LPVOID myFunction, LPCSTR modName,DWORD *hookedAddress)
 {
 	MODULEINFO modInfo;
+	HMODULE hMod = GetModuleHandle(0);
 	GetModuleInformation(GetCurrentProcess(), hMod, &modInfo, sizeof(MODULEINFO));
 	ULONG a;
 	PIMAGE_IMPORT_DESCRIPTOR pDesc = (PIMAGE_IMPORT_DESCRIPTOR)ImageDirectoryEntryToData(&modInfo.lpBaseOfDll, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &a);
