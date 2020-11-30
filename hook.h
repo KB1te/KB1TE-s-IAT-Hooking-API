@@ -7,11 +7,12 @@
 
 class Hook {
 public:
-	BOOL HOOK(LPCSTR toHook, LPVOID myFunction, LPCSTR modName);
-	BOOL HOOK(LPCSTR toHook, LPVOID myFunction, LPCSTR modName, DWORD *hookedAddress);
-	void PrintHookInfo(Hook *hookInfo);
+	BOOL HOOK(LPCSTR toHook, LPVOID myFunction, LPCSTR modName, LPVOID hookedAddress);
+	BOOL UnHook(Hook MyHook);
+	
 private:
 	DWORD *hookedAddress;
 	LPCSTR modName;
-	
+	LPVOID origFunc;
+
 };
