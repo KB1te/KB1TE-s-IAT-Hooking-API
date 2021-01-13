@@ -1,7 +1,7 @@
 #include "hook.h"
 
 
-BOOL Hook::HOOK(LPCSTR toHook, LPVOID myFunction, LPCSTR modName, LPVOID hookedAddress)
+BOOL Hook::HOOK(LPCSTR toHook, LPVOID myFunction, LPCSTR modName)
 {
 	this->origFunc = GetProcAddress(GetModuleHandleA(modName), toHook);
 	MODULEINFO	modInfo;
