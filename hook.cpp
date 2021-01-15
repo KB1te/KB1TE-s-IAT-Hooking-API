@@ -1,55 +1,51 @@
 #include "hook.h"
 
 
-BOOL Hook::HOOK(LPCSTR toHook, LPVOID myFunction, LPCSTR modName)
+BOOL Hook::HOOK(LPCSTR toHook, LPVOID myFunction)
 {
 	this->origFunc = GetProcAddress(GetModuleHandleA(modName), toHook);
-	MODULEINFO	modInfo;
-	HMODULE		hMod = GetModuleHandle(0);
-	GetModuleInformation(GetCurrentProcess(), hMod, &modInfo, sizeof(MODULEINFO));
-	ULONG		a;
-	PIMAGE_IMPORT_DESCRIPTOR	pDesc = (PIMAGE_IMPORT_DESCRIPTOR)ImageDirectoryEntryToData(&modInfo.lpBaseOfDll, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &a);
-	PIMAGE_THUNK_DATA		toRead, toChange;
-	while (pDesc->Name) {
-		toRead = (PIMAGE_THUNK_DATA)(&modInfo.lpBaseOfDll + pDesc->OriginalFirstThunk);
-		toChange = (PIMAGE_THUNK_DATA)(&modInfo.lpBaseOfDll + pDesc->FirstThunk);
-		if (_strcmpi(modName, (char *)pDesc->Name)) {
-			while (toRead->u1.Function) {
-				if (toRead->u1.Ordinal & IMAGE_ORDINAL_FLAG) {
-					PIMAGE_IMPORT_BY_NAME pName = (PIMAGE_IMPORT_BY_NAME)(&modInfo.lpBaseOfDll + toRead->u1.AddressOfData);
-					if (_strcmpi(toHook, pName->Name)) {
-						MEMORY_BASIC_INFORMATION memInfo;
-						VirtualQuery(memInfo.BaseAddress, &memInfo, sizeof(MEMORY_BASIC_INFORMATION));
-						VirtualProtect(memInfo.BaseAddress, memInfo.RegionSize, PAGE_READWRITE, &memInfo.Protect);
-						toChange->u1.Function = (DWORD)(DWORD_PTR)myFunction;
-						VirtualProtect(memInfo.BaseAddress, memInfo.RegionSize, memInfo.Protect, &memInfo.Protect);
-						this->hookedAddress = &toChange->u1.Function;
-						this->modName = (char *)pDesc->Name;
-						return TRUE;
-					}
-					else {
-						pName++;
-					}
-				}
-				toRead++;
-				toChange++;
+	DWORD				oldProc	= NULL;
+	HMODULE				hModule = GetModuleHandleA(NULL);
+	MODULEINFO			ModInfo = { NULL };
+	PIMAGE_DOS_HEADER		pDos    = { NULL };
+	PIMAGE_NT_HEADERS		pNt     = { NULL };
+	PIMAGE_IMPORT_DESCRIPTOR	pDesc   = { NULL };
+	PIMAGE_THUNK_DATA		change  = { NULL };
+	PIMAGE_THUNK_DATA		read    = { NULL };
+	PIMAGE_IMPORT_BY_NAME		pName	= { NULL };
+
+	GetModuleInformation(GetCurrentProcess(), hModule, &ModInfo, sizeof(ModInfo)); 
+	pDos = (PIMAGE_DOS_HEADER)(ModInfo.lpBaseOfDll); 
+	pNt = (PIMAGE_NT_HEADERS)((DWORD_PTR)ModInfo.lpBaseOfDll + pDos->e_lfanew);
+	pDesc = (PIMAGE_IMPORT_DESCRIPTOR)((DWORD_PTR)ModInfo.lpBaseOfDll + pNt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+
+	while(pDesc->OriginalFirstThunk) {
+		read = (PIMAGE_THUNK_DATA)((DWORD_PTR)ModInfo.lpBaseOfDll + pDesc->OriginalFirstThunk);
+		change = (PIMAGE_THUNK_DATA)((DWORD_PTR)ModInfo.lpBaseOfDll + pDesc->FirstThunk);
+		while(read->u1.Function) {
+			pName = (PIMAGE_IMPORT_BY_NAME)((DWORD_PTR)ModInfo.lpBaseOfDll + read->u1.AddressOfData);
+			if (_strcmpi(pName->Name,toHook)) {
+				VirtualProtect((LPVOID)change->u1.Function, sizeof(LPVOID), PAGE_EXECUTE_READWRITE, &oldProc);
+				change->u1.Function = myFunction;
+				VirtualProtect((LPVOID)change->u1.Function, sizeof(LPVOID), oldProc, NULL);
 			}
+			else {
+				pName++;
+			}
+			read++, change++;
 		}
 		pDesc++;
 	}
-
 	return FALSE;
 }
 
 
 BOOL Hook::UnHook(Hook MyHook)
 {
-	
-	MEMORY_BASIC_INFORMATION memInfo;
-	VirtualQuery(memInfo.BaseAddress, &memInfo, sizeof(MEMORY_BASIC_INFORMATION));
-	VirtualProtect(memInfo.BaseAddress, memInfo.RegionSize, PAGE_READWRITE, &memInfo.Protect);
+	DWORD old = NULL;
+	VirtualProtect(this->hookedAddress, sizeof(LPVOID), PAGE_EXECUTE_READWRITE, &old);
 	this->hookedAddress = this->origFunc;
-	VirtualProtect(memInfo.BaseAddress, memInfo.RegionSize, memInfo.Protect, &memInfo.Protect);
+	VirtualProtect(this->hookedAddress, sizeof(LPVOID), old, NULL);
 	return TRUE;
 					
 }
