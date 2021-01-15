@@ -7,7 +7,7 @@
 
 class Hook {
 public:
-	BOOL HOOK(LPCSTR toHook, LPVOID myFunction, LPCSTR modName);
+	BOOL HOOK(LPCSTR toHook, LPVOID myFunction);
 	BOOL UnHook(Hook MyHook);
 	
 private:
