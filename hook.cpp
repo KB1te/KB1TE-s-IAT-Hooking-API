@@ -29,9 +29,6 @@ BOOL Hook::HOOK(LPCSTR toHook, LPVOID myFunction)
 				change->u1.Function = myFunction;
 				VirtualProtect((LPVOID)change->u1.Function, sizeof(LPVOID), oldProc, NULL);
 			}
-			else {
-				pName++;
-			}
 			read++, change++;
 		}
 		pDesc++;
