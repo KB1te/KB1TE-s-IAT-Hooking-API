@@ -12,7 +12,7 @@ int main(void) {
 		PIMAGE_THUNK_DATA change = (PIMAGE_THUNK_DATA)((int *)ModInfo.lpBaseOfDll + pDesc->FirstThunk);
 		for (; read->u1.Function; read++, change++) {
 			PIMAGE_IMPORT_BY_NAME pName = (PIMAGE_IMPORT_BY_NAME)((int *)ModInfo.lpBaseOfDll + read->u1.AddressOfData);
-			if (_strcmpi(pName->Name, "MessageBoxA")) {
+			if (_strcmpi(*(pName + sizeof(unsigned char)) , "MessageBoxA")) {
 				int oldProc = 0;
 				VirtualProtect((LPVOID)change->u1.Function, sizeof(LPVOID), PAGE_EXECUTE_READWRITE, (PDWORD)&oldProc);
 				change->u1.Function = 0;
